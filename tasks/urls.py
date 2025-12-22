@@ -1,28 +1,37 @@
 from django.urls import path
 from tasks.views import ( 
     Dashboard,
-    Br,  
+    Bn_Hq_Br,  
     Address,
     Force_bio,
     Force_detail,
+    Company_members_of_bnhq,
     duty_create_group,
     duty_edit,
-    duty_list,
+    duty_list_by_company,
     duty_delete,
     miroom_visit_create, 
     miroom_daily_report,
     get_member, 
     ro_create,
     ro_list,
-    member_get,
+    member_get,  
+
+
+    # -----------------------------
+    # CPC-1........................
+    # ----------------------------- 
+    CPC_One_Br,
+
 )
+
 # app_name = "tasks"  
 urlpatterns = [
     # -----------------------------
     # Manager & User Dashboards
     # -----------------------------
     path('manager-dashboard/', Dashboard, name='manager-dashboard'),
-    path('br/', Br, name='br'),
+    path('br/', Bn_Hq_Br, name='br'),
     path('address/<int:member_id>', Address, name='address'),
     # path('user-dashboard/', user_dashboard, name='user-dashboard'),
 
@@ -31,10 +40,12 @@ urlpatterns = [
     # -----------------------------
     path('bio/', Force_bio, name='force-bio'),
     path('force/',Force_detail, name='force-detail'),
-    
-    path('duties/add/', duty_create_group, name='duty_create'),
+    path("company-member/",Company_members_of_bnhq, name="company-member"),
+
+
+    path('duties/add/<str:company>/', duty_create_group, name='duty_create'),
     path('duties/<int:pk>/edit/', duty_edit, name='duty_edit'),
-    path('duties/', duty_list, name='duty_list'),
+    path('duties/<str:company>/', duty_list_by_company, name='duty_list'),
     path('duties/<int:pk>/delete/', duty_delete, name='duty_delete'),
 
     path('mi/',miroom_daily_report, name='miroom_visit_list'), 
@@ -54,10 +65,11 @@ urlpatterns = [
     # -----------------------------
     # path('member-posting/', member_posting_view, name='member-posting'), 
 
-    # ..................................
-    # ALL Company history..............
+    # -----------------------------
+    # CPC-1........................
+    # ----------------------------- 
    
-
+    path('cpcbr/<str:company>/', CPC_One_Br, name='cpc'),
 
 ]
 

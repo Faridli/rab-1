@@ -1,151 +1,106 @@
 from django import forms
 from datetime import date, datetime
-from .models import ForceMember, PresentAddress, PermanentAddress, MiRoomVisit,Duty, Ro
+from .models import ForceMember, PresentAddress, PermanentAddress, MiRoomVisit, Duty, Ro
 
 current_year = date.today().year
 
 # -------------------------------
-# CSS Classes
+# 🔹 Style Mixin
 # -------------------------------
-INPUT_CLASSES = "form-input border-blue-500 focus:ring-2 focus:ring-blue-300 rounded-md py-1 px-2"
-SELECT_CLASSES = "form-select border-blue-500 focus:ring-2 focus:ring-blue-300 rounded-md py-1 px-2"
-CHECKBOX_CLASSES = "form-checkbox h-5 w-5 text-blue-500"
+class StyleFormMixin:
+    base_classes = "border-blue-500 focus:ring-2 focus:ring-blue-300 rounded-md py-1 px-2"
+
+    default_classes = {
+        "input": f"form-input {base_classes}",
+        "select": f"form-select {base_classes}",
+        "checkbox": "form-checkbox h-5 w-5 text-blue-500",
+    }
+
+    def apply_style_widgets(self):
+        for field in self.fields.values():
+            widget = field.widget
+            if isinstance(widget, (forms.TextInput, forms.NumberInput, forms.EmailInput, forms.FileInput)):
+                widget.attrs.setdefault('class', self.default_classes['input'])
+            elif isinstance(widget, forms.Select):
+                widget.attrs.setdefault('class', self.default_classes['select'])
+            elif isinstance(widget, forms.CheckboxInput):
+                widget.attrs.setdefault('class', self.default_classes['checkbox'])
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.apply_style_widgets()
+
 
 # -------------------------------
 # 🔹 ForceMember Form
 # -------------------------------
-class ForceModelForm(forms.ModelForm):
+class ForceModelForm(StyleFormMixin, forms.ModelForm):
+
     svc_join = forms.CharField(
-        label='Svc Join',
         required=False,
-        widget=forms.TextInput(attrs={'class': INPUT_CLASSES, 'placeholder': 'DD/MM/YYYY'}),
-        initial=date(current_year, 1, 1).strftime("%d/%m/%Y")
+        initial=date(current_year, 1, 1).strftime("%d/%m/%Y"),
+        widget=forms.TextInput(attrs={'placeholder': 'DD/MM/YYYY'})
     )
     rab_join = forms.CharField(
-        label='RAB Join',
         required=False,
-        widget=forms.TextInput(attrs={'class': INPUT_CLASSES, 'placeholder': 'DD/MM/YYYY'}),
-        initial=date(current_year, 1, 1).strftime("%d/%m/%Y")
+        initial=date(current_year, 1, 1).strftime("%d/%m/%Y"),
+        widget=forms.TextInput(attrs={'placeholder': 'DD/MM/YYYY'})
     )
     birth_day = forms.CharField(
-        label='Birth Day',
         required=False,
-        widget=forms.TextInput(attrs={'class': INPUT_CLASSES, 'placeholder': 'DD/MM/YYYY'}),
-        initial=date(current_year, 1, 1).strftime("%d/%m/%Y")
+        initial=date(current_year, 1, 1).strftime("%d/%m/%Y"),
+        widget=forms.TextInput(attrs={'placeholder': 'DD/MM/YYYY'})
     )
 
     class Meta:
         model = ForceMember
         exclude = ['company']
         fields = [
-            'no', 'name', 'rank', 'force', 
-            'svc_join','mother_unit', 'rab_join', 'birth_day',
-            'nid', 'email', 'phone','photo', 'wf_phone','company',
+            'no','name','rank','force','svc_join','mother_unit',
+            'rab_join','birth_day','nid','email','phone','photo',
+            'wf_phone','company'
         ]
-        labels = {
-            'no': 'Personal No',
-            'name': 'Full Name',
-            'rank': 'Rank',
-            'force': 'Force',
-            'mother_unit': 'moteher_unit',
-            'svc_join': 'Svc Join',
-            'rab_join': 'RAB Join',
-            'birth_day': 'Birth Day',
-            'nid': 'NID',
-            'email': 'Email',
-            'phone': 'Phone',
-            'photo':'photo',
-            'wf_phone': 'Wife Phone', 
-            'company':'company',
-        }
-        widgets = {
-            'no': forms.NumberInput(attrs={'class': INPUT_CLASSES, 'placeholder': 'Personal Number'}),
-            'name': forms.TextInput(attrs={'class': INPUT_CLASSES, 'placeholder': 'Full Name'}),
-            'rank': forms.Select(attrs={'class': SELECT_CLASSES}),
-            'force': forms.Select(attrs={'class': SELECT_CLASSES}),
-            'mother_unit': forms.TextInput(attrs={'class': INPUT_CLASSES, 'placeholder': 'Unit Name....'}),
-            'company': forms.Select(attrs={'class': SELECT_CLASSES}),
-            'nid': forms.TextInput(attrs={'class': INPUT_CLASSES, 'placeholder': 'NID'}),
-            'email': forms.EmailInput(attrs={'class': INPUT_CLASSES, 'placeholder': 'Email'}),
-            'phone': forms.TextInput(attrs={'class': INPUT_CLASSES, 'placeholder': 'Phone Number'}),
-           'photo': forms.FileInput(attrs={'class': INPUT_CLASSES,}),
-            'wf_phone': forms.TextInput(attrs={'class': INPUT_CLASSES, 'placeholder': 'Wife Phone Number'}),
-        }
 
-    # -------------------------------
-    # Custom clean methods for DD/MM/YYYY
-    # -------------------------------
-    def clean_svc_join(self):
-        data = self.cleaned_data['svc_join']
+    def _clean_date(self, field):
+        data = self.cleaned_data.get(field)
         if data:
             try:
                 return datetime.strptime(data, "%d/%m/%Y").date()
             except ValueError:
-                raise forms.ValidationError("Invalid date format. Use DD/MM/YYYY.")
+                raise forms.ValidationError("Use DD/MM/YYYY format")
         return None
+
+    def clean_svc_join(self):
+        return self._clean_date('svc_join')
 
     def clean_rab_join(self):
-        data = self.cleaned_data['rab_join']
-        if data:
-            try:
-                return datetime.strptime(data, "%d/%m/%Y").date()
-            except ValueError:
-                raise forms.ValidationError("Invalid date format. Use DD/MM/YYYY.")
-        return None
+        return self._clean_date('rab_join')
 
     def clean_birth_day(self):
-        data = self.cleaned_data['birth_day']
-        if data:
-            try:
-                return datetime.strptime(data, "%d/%m/%Y").date()
-            except ValueError:
-                raise forms.ValidationError("Invalid date format. Use DD/MM/YYYY.")
-        return None
+        return self._clean_date('birth_day')
+
 
 # -------------------------------
 # 🔹 Present Address Form
 # -------------------------------
-class PresentModelForm(forms.ModelForm):
+class PresentModelForm(StyleFormMixin, forms.ModelForm):
     class Meta:
         model = PresentAddress
-        fields = ['house', 'road', 'sector', 'village','post', 'thana', 'district', 'division']
-        labels = {
-            'house': 'House No',
-            'road': 'Road No',
-            'sector': 'Sector',
-            'village': 'Village',
-            'post':'post',
-            'thana': 'Police Station',
-            'district': 'District',
-            'division': 'Division',
-        }
-        widgets = {f: forms.TextInput(attrs={'class': INPUT_CLASSES}) for f in fields}
+        fields = ['house','road','sector','village','post','thana','district','division']
+
 
 # -------------------------------
 # 🔹 Permanent Address Form
 # -------------------------------
-class PermanentModelForm(forms.ModelForm):
+class PermanentModelForm(StyleFormMixin, forms.ModelForm):
     same_as_present = forms.BooleanField(
         required=False,
-        label='Same as Present Address',
-        widget=forms.CheckboxInput(attrs={'class': CHECKBOX_CLASSES})
+        widget=forms.CheckboxInput(attrs={'class': StyleFormMixin.default_classes['checkbox']})
     )
 
     class Meta:
         model = PermanentAddress
-        fields = ['house', 'road', 'sector', 'village','post', 'thana', 'district', 'division']
-        labels = {
-            'house': 'House No',
-            'road': 'Road No',
-            'sector': 'Sector',
-            'village': 'Village',
-            'post':'post',
-            'thana': 'Police Station',
-            'district': 'District',
-            'division': 'Division',
-        }
-        widgets = {f: forms.TextInput(attrs={'class': INPUT_CLASSES}) for f in fields}
-
+        fields = ['house','road','sector','village','post','thana','district','division']
 
 
 # -------------------------------
@@ -154,29 +109,28 @@ class PermanentModelForm(forms.ModelForm):
 class CompanySelectForm(forms.ModelForm):
     class Meta:
         model = ForceMember
-        fields = ['company'] 
+        fields = ['company']
 
 
-# forms.py
-
+# -------------------------------
+# 🔹 Duty Form
+# -------------------------------
 class DutyForm(forms.ModelForm):
 
     member_numbers = forms.CharField(
-        label="Member Numbers",
         required=False,
         widget=forms.Textarea(attrs={
-            "placeholder": "101, 102, 103\nঅথবা\n101\n102\n103",
-            "class": "border border-gray-300 rounded w-full p-2"
+            "placeholder": "101, 102\nঅথবা\n101\n102",
+            "class": "border border-blue-600 rounded p-2 w-3/4"
         })
     )
 
     member_no = forms.IntegerField(
-    widget=forms.NumberInput(attrs={
-        'class': 'border-2 border-blue-400 rounded p-2 w-full',
-        'placeholder': 'Member No'
-    })
-)
-
+        widget=forms.NumberInput(attrs={
+            'class': 'border-2 border-blue-600 rounded p-2 w-3/4',
+            'placeholder': 'Member No'
+        })
+    )
 
     members = forms.ModelMultipleChoiceField(
         queryset=ForceMember.objects.all(),
@@ -188,71 +142,53 @@ class DutyForm(forms.ModelForm):
 
     class Meta:
         model = Duty
-        fields = [ 
-            'serial_no',
-            'member_numbers',
-            'member_no',
-            'members',
-            'date',
-            'start_time',
-            'end_time',
-            'destination'
+        fields = [
+            'serial_no','member_numbers','member_no','members',
+            'date','start_time','end_time','destination','signature'
         ]
-        widgets = { 
-            'serial_no': forms.TextInput(attrs={
-                'readonly': 'readonly',
-                'class': 'bg-gray-100'
-            }),
-            'date': forms.DateInput(attrs={'type': 'date', 'class': 'border-2 border-blue-400 rounded p-2 w-full'}),
-            'start_time': forms.TimeInput(attrs={'type': 'time', 'class': 'border-2 border-blue-400 rounded p-2 w-full'}),
-            'end_time': forms.TimeInput(attrs={'type': 'time', 'class': 'border-2 border-blue-400 rounded p-2 w-full'}),
-            'destination': forms.TextInput(attrs={'class': 'border-2 border-blue-400 rounded p-2 w-full'}),
+        widgets = {
+            'serial_no': forms.TextInput(attrs={'readonly': True,'class': 'bg-gray-100'}),
+            'date': forms.DateInput(attrs={'type': 'date'}),
+            'start_time': forms.TimeInput(attrs={'type': 'time'}),
+            'end_time': forms.TimeInput(attrs={'type': 'time'}),
+            'destination': forms.TextInput(),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk:
+            self.fields['signature'].disabled = True
 
+
+# -------------------------------
+# 🔹 Mi Room Visit Form
+# -------------------------------
 class MiRoomVisitForm(forms.ModelForm):
-    per_number = forms.IntegerField(label="Per Number", required=True)
+    per_number = forms.IntegerField(label="Per Number")
 
     class Meta:
         model = MiRoomVisit
-        fields = ['per_number', 'symptoms', 'treatment']
-        widgets = {
-            'symptoms': forms.Textarea(attrs={'rows': 2}),
-            'treatment': forms.Textarea(attrs={'rows': 2}),
-        }
+        fields = ['per_number','symptoms','treatment']
 
     def clean_per_number(self):
         per_no = self.cleaned_data['per_number']
         try:
-            member = ForceMember.objects.get(no=per_no)
+            return ForceMember.objects.get(no=per_no)
         except ForceMember.DoesNotExist:
-            raise forms.ValidationError("Invalid Per Number!")
-        return member
+            raise forms.ValidationError("Invalid Per Number")
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-        instance.member = self.cleaned_data['per_number']  # assign ForceMember instance
+        instance.member = self.cleaned_data['per_number']
         if commit:
             instance.save()
         return instance
 
+
+# -------------------------------
+# 🔹 Ro Form
+# -------------------------------
 class RoForm(forms.ModelForm):
     class Meta:
-        model = Ro  # আপনার model
-        fields = ['member','destination', 'sing']
-
-
-
-# class AcctForm(forms.ModelForm):
-#     per_number = forms.IntegerField(label="Per Number", required=True) 
-#     class Meta:
-#         model = AcctBr 
-#         fields = ['member', 'lpc','destination',] 
-#         wedget = {
-#             'lpc':forms.Select(attrs={'class': 'border border-gray-300 rounded px-4 py-2 w-full'}),
-#             'destination':forms.TextInput(attrs={'class':'border border-gray-300 rounded px-4 py-2 w-full'})
-#         }
-    
-             
-          
-            
+        model = Ro
+        fields = ['member','destination','sing']

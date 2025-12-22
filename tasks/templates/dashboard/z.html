@@ -1,4 +1,57 @@
-{% extends "dashboard/css.html" %}
+def duty_create_group(request):
+    if request.method == "POST":
+        form = DutyForm(request.POST)
+        if form.is_valid():
+            raw_numbers = form.cleaned_data['member_numbers']
+            numbers = [n.strip() for n in raw_numbers.replace(",", " ").split() if n.strip()]
+
+            valid_members, invalid_numbers = [], []
+
+            for num in numbers:
+                member = ForceMember.objects.filter(no=num).first()
+                if member:
+                    valid_members.append(member)
+                else:
+                    invalid_numbers.append(num)
+
+            if invalid_numbers:
+                messages.error(request, f"Invalid Member Numbers: {', '.join(invalid_numbers)}")
+                return render(request, 'bnhq/duty_create_group.html', {'form': form})
+
+            for member in valid_members:
+                Duty.objects.create(
+                    member=member,
+                    name=member.name,
+                    rank=member.get_rank_display(),
+                    phone=member.phone,
+                    date=form.cleaned_data['date'],
+                    start_time=form.cleaned_data['start_time'],
+                    end_time=form.cleaned_data['end_time'],
+                    destination=form.cleaned_data['destination'],
+                )
+
+            messages.success(request, "Group duty created successfully!")
+            return redirect('duty_list')
+    else:
+        form = DutyForm()
+
+    return render(request, 'bnhq/duty_create_group.html', {'form': form})  
+
+
+
+ 
+    
+
+
+
+
+
+
+
+
+
+
+    {% extends "dashboard/css.html" %}
 {% load widget_tweaks %}
 {% block title %}Create Duty{% endblock %}
 
@@ -72,17 +125,17 @@
         <!-- Submit -->
           <div class="flex justify-end gap-8 space-y-3">
                 
-        <a href="{% url 'duty_list' company=company %}" class="px-4 py-2 bg-blue-600 hover:bg-green-500 text-white rounded-lg shadow">
+        <a href="{% url 'duty_list' %}" class="px-4 py-2 bg-blue-600 hover:bg-green-500 text-white rounded-lg shadow">
             view All Duty
         </a>
     
 
-         <a href="{% url 'duty_create' company='Bn HQ' %}" 
-            class="px-4 py-2 bg-amber-400 hover:bg-green-700 text-white rounded-lg shadow">
-                Cancel
-        </a>
-
-         <a href="{% url 'duty_list' company=company %}" type="submit" 
+         <a href="{% url 'duty_create' %}" type="submit" 
+            class="px-4 py-2 bg-amber-400  hover:bg-green-700 text-white rounded-lg shadow">
+            Cancel
+            
+         </a>
+         <a href="{% url 'duty_list' %}" type="submit" 
             class="px-4 py-2 bg-blue-600  hover:bg-green-700 text-white rounded-lg shadow">
             save
             

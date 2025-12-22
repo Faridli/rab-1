@@ -1,6 +1,8 @@
 from django.db import models
 from datetime import date, time 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError 
+
+
 # -------------------------------
 # 🔹 All Force 
 # -------------------------------
@@ -11,27 +13,29 @@ def validate_jpg(value):
 
 class ForceMember(models.Model):
     COM_CHOICES = [
-        ('OTHER', '......'),
-        ('cpc-1', 'CPC-1'),
-        ('cpc-2', 'CPC-2'),
-        ('cpc-3', 'CPC-3'),
-        ('cpsc', 'CPSC'),
-        ('hq', 'HQ'),
+       
+        ('CPC-1', 'CPC-1'),
+        ('CPC-2', 'CPC-2'),
+        ('CPC-3', 'CPC-3'),
+        ('CPSC', 'CPSC'),
+        ('HQ', 'HQ'),
         ('Bn HQ', 'Bn HQ'),
-        ('ro', 'RO'), 
-        ('mi', 'Mi'), 
-        ('ab', 'A Branch'), 
+        ('Ro', 'RO'), 
+        ('Mi', 'Mi'), 
+        ('A Branch', 'A Branch'), 
+        ('Acct BR', 'Acct Br'), 
+        ('RAB-1 Out', 'RAB-1 Out'), 
     ]
 
     RANK_CHOICES = [
         ('OTHER', '......'),
-        ('OFFICER', 'Offr'),
+        ('Offr', 'Offr'),
         ('DAD', 'DAD'),
         ('SI', 'SI'),
         ('ASI', 'ASI'),
-        ('NAYEK', 'Nek'),
-        ('CONSTABLE', 'Con'),
-        ('CIVIL', 'Civ'),
+        ('Nek', 'Nek'),
+        ('Con', 'Con'),
+        ('Civ', 'Civ'),
     ]
     FORCE_CHOICES = [
         ('OTHER', '......'),
@@ -65,7 +69,8 @@ class ForceMember(models.Model):
     nid = models.CharField(max_length=20, unique=True)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=15)
-    wf_phone = models.CharField(max_length=15)
+    wf_phone = models.CharField(max_length=15) 
+    out_date = models.DateField(blank=True, null=True) 
 
     def __str__(self):
         return f"{self.get_rank_display()} - {self.name}"
@@ -79,14 +84,14 @@ class PresentAddress(models.Model):
         on_delete=models.CASCADE,
         related_name='present_address'
     )
-    house = models.CharField(max_length=20)
-    road = models.CharField(max_length=20)
-    sector = models.CharField(max_length=20)
-    village = models.CharField(max_length=20)
-    post = models.CharField(max_length=20, default="N/A")
-    thana = models.CharField(max_length=30)
-    district = models.CharField(max_length=30)
-    division = models.CharField(max_length=30)
+    house = models.CharField(max_length=20,blank=True, null=True)
+    road = models.CharField(max_length=20,blank=True, null=True)
+    sector = models.CharField(max_length=20,blank=True, null=True)
+    village = models.CharField(max_length=20,blank=True, null=True)
+    post = models.CharField(max_length=20,blank=True, null=True)
+    thana = models.CharField(max_length=30,blank=True, null=True)
+    district = models.CharField(max_length=30,blank=True, null=True)
+    division = models.CharField(max_length=30,blank=True, null=True)
 
     def __str__(self):
         return f"Present Address of {self.member.name}"
@@ -100,14 +105,14 @@ class PermanentAddress(models.Model):
         on_delete=models.CASCADE,
         related_name='permanent_address'
     )
-    house = models.CharField(max_length=20)
-    road = models.CharField(max_length=20)
-    sector = models.CharField(max_length=20)
-    village = models.CharField(max_length=20)
-    post = models.CharField(max_length=20, default="N/A")
-    thana = models.CharField(max_length=30)
-    district = models.CharField(max_length=30)
-    division = models.CharField(max_length=30)
+    house = models.CharField(max_length=20,blank=True, null=True)
+    road = models.CharField(max_length=20,blank=True, null=True)
+    sector = models.CharField(max_length=20,blank=True, null=True)
+    village = models.CharField(max_length=20,blank=True, null=True)
+    post = models.CharField(max_length=20, blank=True, null=True)
+    thana = models.CharField(max_length=30,blank=True, null=True)
+    district = models.CharField(max_length=30,blank=True, null=True)
+    division = models.CharField(max_length=30,blank=True, null=True)
 
     def __str__(self):
         return f"Permanent Address of {self.member.name}"
@@ -157,7 +162,9 @@ class Duty(models.Model):
     date = models.DateField(default=date.today)
     start_time = models.TimeField(default=time(8,0))
     end_time = models.TimeField()
-    serial_no = models.CharField(max_length=10, blank=True, null=True, unique=True)
+    serial_no = models.CharField(max_length=10, blank=True, null=True, unique=True) 
+     # স্বাক্ষরের জন্য ফিল্ড
+    signature = models.ImageField(upload_to='signatures/', null=True, blank=True)
 
     def save(self, *args, **kwargs):
 
@@ -204,3 +211,4 @@ class MemberPosting(models.Model):
 
     def __str__(self):
         return f"{self.member.name} - {self.status}"
+

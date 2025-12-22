@@ -4,20 +4,8 @@
 
 {% block content %}
 <main class="p-6 bg-white rounded-xl shadow-md max-w-5xl mx-auto">
+    <h1 class="bg-amber-500 text-4xl font-bold mb-6 text-center text-gray-900 rounded py-4">RO List</h1>
 
-    <h1 class="bg-green-600 text-4xl font-bold mb-6 text-center text-white rounded py-4">
-        RO Entry List
-    </h1>
-
-    <!-- Back to Entry Page -->
-    <div class="mb-4 text-right">
-        <a href="{% url 'ro-create' %}" 
-           class="bg-blue-600 text-white px-4 py-2 rounded shadow">
-            + New RO Entry
-        </a>
-    </div>
-
-    <!-- TABLE -->
     <div class="overflow-x-auto">
         <table class="w-full border-collapse border border-gray-300 text-left">
             <thead class="bg-gray-200">
@@ -27,36 +15,28 @@
                     <th class="border px-3 py-2">Rank</th>
                     <th class="border px-3 py-2">Name</th>
                     <th class="border px-3 py-2">NID</th>
+                    <th class="border px-3 py-2">Phone</th>
                     <th class="border px-3 py-2">Destination</th>
-                    <th class="border px-3 py-2 text-center">Action</th>
                 </tr>
             </thead>
             <tbody>
                 {% for entry in ro_entries %}
-                <tr class="hover:bg-gray-100">
+                <tr>
                     <td class="border px-3 py-2">{{ forloop.counter }}</td>
-                    <td class="border px-3 py-2">{{ entry.per_no }}</td>
-                    <td class="border px-3 py-2">{{ entry.rank }}</td>
-                    <td class="border px-3 py-2">{{ entry.name }}</td>
-                    <td class="border px-3 py-2">{{ entry.nid }}</td>
+                    <td class="border px-3 py-2">{{ entry.member.no }}</td>
+                    <td class="border px-3 py-2">{{ entry.member.rank }}</td>
+                    <td class="border px-3 py-2">{{ entry.member.name }}</td>
+                    <td class="border px-3 py-2">{{ entry.member.nid }}</td>
+                    <td class="border px-3 py-2">{{ entry.member.phone }}</td>
                     <td class="border px-3 py-2">{{ entry.destination }}</td>
-
-                    <td class="border px-3 py-2 text-center">
-                        <a href="#" class="text-blue-600 font-semibold">View</a>
-                        |
-                        <a href="#" class="text-red-600 font-semibold">Delete</a>
-                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="7" class="text-center py-4 text-gray-500">
-                        No RO entries found.
-                    </td>
+                    <td colspan="6" class="text-center py-4">No RO entries found.</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-
 </main>
 {% endblock %}

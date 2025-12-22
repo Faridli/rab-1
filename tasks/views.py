@@ -24,7 +24,7 @@ def Dashboard(request):
 # ---------------------------------------------------
 # Bn HQ
 # ---------------------------------------------------
-def Br(request):
+def Bn_Hq_Br(request):
     return render(request, 'bnhq/list.html')
 
 
@@ -72,27 +72,73 @@ def Force_bio(request):
 # ---------------------------------------------------
 # Force Detail / Company Select
 # ---------------------------------------------------
-def Force_detail(request):
-    members = ForceMember.objects.all().select_related('present_address', 'permanent_address')
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+from django.utils import timezone
+from .models import ForceMember
+from .forms import CompanySelectForm
 
-    if request.method == "POST":
+def Force_detail(request):
+
+    # 🔹 Main list (OUT বাদ)
+    members = ForceMember.objects.exclude(company__iexact="RAB-1 Out")\
+        .select_related('present_address', 'permanent_address')
+
+    # 🔹 OUT list
+    out_members = ForceMember.objects.filter(company__iexact="RAB-1 Out").order_by('-out_date')
+
+    if request.method == "POST" and request.headers.get("X-Requested-With") == "XMLHttpRequest":
         member_id = request.POST.get("member_id")
         member = get_object_or_404(ForceMember, id=member_id)
+
         form = CompanySelectForm(request.POST, instance=member)
-
         if form.is_valid():
-            form.save()
-            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-                return JsonResponse({"success": True, "company_name": member.company})
-            return redirect("force-detail")
-        else:
-            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-                return JsonResponse({"success": False})
+            company = form.cleaned_data["company"].strip()
+            member.company = company
 
+            # 🔴 OUT হলে date set
+            if company.lower() == "rab-1 out":
+                if not member.out_date:
+                    member.out_date = timezone.now().date()
+            else:
+                member.out_date = None
+
+            member.save()
+
+            return JsonResponse({
+                "success": True,
+                "company_name": member.get_company_display(),
+                "is_out": company.lower() == "rab-1 out",
+                "out_date": member.out_date.strftime("%d-%m-%Y") if member.out_date else ""
+            })
+
+        return JsonResponse({"success": False})
+
+    # 🔹 Forms dictionary for each member
     forms_dict = {m.id: CompanySelectForm(instance=m) for m in members}
-    return render(request, "bnhq/force_detail.html", {"members": members, "forms_dict": forms_dict})
 
+    return render(request, "bnhq/force_detail.html", {
+        "members": members,
+        "out_members": out_members,
+        "forms_dict": forms_dict
+    })
 
+#--------------------------------------------------
+# Company Wise..............................
+# ---------------------------------------------------
+def Company_members_of_bnhq(request):
+    members = ForceMember.objects.filter(company='Bn HQ').order_by('rank') 
+    force_state = members.values('force').annotate(total=Count('id'))
+    rank_state = members.values('rank').annotate(total=Count('id'))
+
+    context = {
+            'members':members,
+            'company': 'Bn HQ', 
+            'force_state': force_state,
+            'rank_state': rank_state
+    }
+
+    return render(request, 'bnhq/company_members.html',context)
 # ---------------------------------------------------
 # Address View
 # ---------------------------------------------------
@@ -131,9 +177,9 @@ def Address(request, member_id):
 # ---------------------------------------------------
 # Duty Views
 # ---------------------------------------------------
-def duty_create_group(request):
+def duty_create_group(request, company):
     if request.method == "POST":
-        form = DutyForm(request.POST)
+        form = DutyForm(request.POST, request.FILES)
         if form.is_valid():
             raw_numbers = form.cleaned_data['member_numbers']
             numbers = [n.strip() for n in raw_numbers.replace(",", " ").split() if n.strip()]
@@ -141,7 +187,7 @@ def duty_create_group(request):
             valid_members, invalid_numbers = [], []
 
             for num in numbers:
-                member = ForceMember.objects.filter(no=num).first()
+                member = ForceMember.objects.filter(no=num, company=company).first()
                 if member:
                     valid_members.append(member)
                 else:
@@ -149,7 +195,7 @@ def duty_create_group(request):
 
             if invalid_numbers:
                 messages.error(request, f"Invalid Member Numbers: {', '.join(invalid_numbers)}")
-                return render(request, 'bnhq/duty_create_group.html', {'form': form})
+                return render(request, 'bnhq/duty_create_group.html', {'form': form, 'company': company})
 
             for member in valid_members:
                 Duty.objects.create(
@@ -163,12 +209,13 @@ def duty_create_group(request):
                     destination=form.cleaned_data['destination'],
                 )
 
-            messages.success(request, "Group duty created successfully!")
+            messages.success(request, f"{company} group duty created successfully!")
             return redirect('duty_list')
     else:
         form = DutyForm()
 
-    return render(request, 'bnhq/duty_create_group.html', {'form': form})
+    return render(request, 'bnhq/duty_create_group.html', {'form': form, 'company': company})
+
 
 
 def duty_edit(request, pk):
@@ -180,9 +227,9 @@ def duty_edit(request, pk):
     return render(request, 'bnhq/duty_form.html', {'form': form, 'edit': True})
 
 
-def duty_list(request):
-    duties = Duty.objects.all().order_by('-date', '-start_time')
-    return render(request, 'bnhq/duty_list.html', {'duties': duties})
+def duty_list_by_company(request, company):
+    duties = Duty.objects.filter(member__company=company).order_by('destination', 'date')
+    return render(request, 'bnhq/duty_list.html', {'duties': duties, 'company': company})
 
 
 def duty_delete(request, pk):
@@ -257,7 +304,7 @@ def ro_create(request):
     return render(request, 'ro/ro_form.html', {'form': form, 'member': member}) 
 
 def ro_list(request):
-    ro_entries = Ro.objects.all().order_by('-id')
+    ro_entries = Ro.objects.all().order_by()
     return render(request, 'ro/ro_list.html', {'ro_entries': ro_entries})
 
 
@@ -282,6 +329,14 @@ def member_get(request, query):
         return JsonResponse({"success": False, "error": str(e)})
 
 # def Acct_Br(request):
-    
+
+
+# ---------------------------------------------------
+# CPC 
+# ---------------------------------------------------
+def CPC_One_Br(request,company):
+    return render(request, 'cpcone/list.html',{
+        'company': company
+    })  
 
 

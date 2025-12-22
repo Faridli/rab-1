@@ -1,0 +1,52 @@
+{% load static %} 
+{% load widget_tweaks %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Up</title>
+    <!-- <link rel="stylesheet" href="{% static 'css/output.css' %}"> --> 
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 bg-gradient-to-br from-gray-300 to-purple-600"> 
+    <!-- Background Image -->
+    <!-- <div class="absolute inset-0 bg-cover bg-center"
+         style="background-image: url('{% static 'images/ra.jpg' %}');"> </div> -->
+
+
+    <div class="max-w-md mx-auto bg-white p-6 rounded shadow mt-4">
+        <h1 class="text-3xl text-indigo-600 leading-none font-bold text-center my-4">
+        WELCOME👋
+    </h1> 
+    <p class="text-center text-gray-500 mt-1 mb-2">
+            Registration 
+    </p>
+        <form method="POST">
+            {% csrf_token %}
+
+            {% for field in form %}
+                <div class="mb-4">
+                    <label for="{{ field.id_for_label }}" class="block text-gray-700 font-medium mb-1">
+                        {{ field.label }}
+                    </label>
+
+                    <!-- 🔑 input field with Tailwind styling -->
+                    {{ field|add_class:"w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-300" }}
+
+                    {% if field.errors %}
+                        <p class="text-red-500 text-sm mt-1">
+                            {{ field.errors|striptags }}
+                        </p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <button type="submit"
+                class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+                Sign up
+            </button>
+        </form>
+    </div>
+</body>
+</html>
