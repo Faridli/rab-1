@@ -14,14 +14,14 @@
    {% for date, data in grouped_data.items %}
 <div class="bg-white p-5 rounded-xl shadow-md mb-6">
 
-    <h2 class="flex-cols-2 text-2xl font-bold mb-4 p-6 text-right">
+    <h2 class="flex-cols-2 text-xl font-bold mb-4 p-6 text-right">
         <p>{{ date }} </p>
         <p class="text-2xl">Total Visits = {{ data|length }}</p>
     </h2>
 
     <div class="overflow-x-auto">
         <table class="w-full border border-gray-300 table-auto">
-            <thead class="bg-blue-600 text-white text-center text-3xl">
+            <thead class="bg-blue-600 text-white text-center text-xl">
                 <tr>
                     <th class="p-3 border ">Ser</th>
                     <th class="p-2 border ">Per No</th>
@@ -34,7 +34,7 @@
             </thead>
             <tbody>
                 {% for visit in data.items %}
-                <tr class="border text-2xl hover:bg-sky-400">
+                <tr class="border text-base hover:bg-sky-400">
                     <td class="p-2 border text-center">{{ forloop.counter }}</td>
                     <td class="p-2 border text-center">{{ visit.member.no }}</td>
                     <td class="p-2 border text-center">{{ visit.member.get_rank_display }}</td>

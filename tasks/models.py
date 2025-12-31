@@ -1,6 +1,7 @@
 from django.db import models
 from datetime import date, time 
-from django.core.exceptions import ValidationError 
+from django.core.exceptions import ValidationError  
+# from django.contrib.auth.models import User
 
 
 # -------------------------------
@@ -48,12 +49,20 @@ class ForceMember(models.Model):
         ('CIV', 'Civ'),
     ]
 
+    # user = models.OneToOneField(
+    #     User, 
+    #     on_delete=models.CASCADE, 
+    #     null = True, 
+    #     blank = True, 
+    #     related_name = 'force_profile'
+
+    # )
     no = models.IntegerField(unique=True)
     name = models.CharField(max_length=50)
     rank = models.CharField(max_length=20, choices=RANK_CHOICES)
     photo = models.ImageField(
-        upload_to='photos/',
-        validators=[validate_jpg],
+        upload_to='tasks_sign_image',
+        # validators=[validate_jpg],
         blank=True,
         null=True
     )

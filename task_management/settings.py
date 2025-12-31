@@ -51,6 +51,25 @@ INTERNAL_IPS = [
 ]
 
 # =======================
+# TEMPLATES 
+# ======================= 
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [BASE_DIR / 'templates'],  # global templates (optional)
+        'APP_DIRS': True,  # ⭐ খুবই গুরুত্বপূর্ণ
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+# =======================
 # URL & WSGI
 # =======================
 ROOT_URLCONF = 'task_management.urls'
@@ -105,3 +124,7 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+FRONTEND_URL = 'http://127.0.0.1:8000' 
+
+LOGIN_URL = 'sign-in'

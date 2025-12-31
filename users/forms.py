@@ -1,8 +1,8 @@
 from django import forms
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission, Group
 import re  
-from tasks.forms import StyleFormMixin
-
+from tasks.forms import StyleFormMixin 
+from django.contrib.auth.forms import AuthenticationForm
 
 class CustomRegistrationForm(StyleFormMixin, forms.ModelForm):
     username = forms.CharField(
@@ -75,3 +75,31 @@ class CustomRegistrationForm(StyleFormMixin, forms.ModelForm):
             raise forms.ValidationError("Passwords do not match.")
 
         return cleaned_data
+
+class loginForm(StyleFormMixin, AuthenticationForm):
+    def __init__(self, request = ..., *args, **kwargs):
+        super().__init__(request, *args, **kwargs) 
+
+
+class AssignRoleForm(StyleFormMixin,forms.Form):
+    role = forms.ModelChoiceField(
+        queryset=Group.objects.all(),
+        empty_label="Select Role"
+    ) 
+
+
+class CreateGroupForm(StyleFormMixin, forms.ModelForm):
+    permissions = forms.ModelMultipleChoiceField(
+        queryset=Permission.objects.all(),
+        widget=forms.CheckboxSelectMultiple(),
+        required=False,
+        label='Assign Permission'
+    )
+
+    class Meta:
+        model = Group
+        fields = ['name', 'permissions']
+
+
+
+

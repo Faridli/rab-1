@@ -1,6 +1,8 @@
 from django.urls import path
 from tasks.views import ( 
     Dashboard,
+    User_Dashboard, 
+    dashboard1,
     Bn_Hq_Br,  
     Address,
     Force_bio,
@@ -31,6 +33,7 @@ urlpatterns = [
     # Manager & User Dashboards
     # -----------------------------
     path('manager-dashboard/', Dashboard, name='manager-dashboard'),
+    path('user-dashboard/',User_Dashboard, name='user-dashboard'),
     path('br/', Bn_Hq_Br, name='br'),
     path('address/<int:member_id>', Address, name='address'),
     # path('user-dashboard/', user_dashboard, name='user-dashboard'),
@@ -70,6 +73,7 @@ urlpatterns = [
     # ----------------------------- 
    
     path('cpcbr/<str:company>/', CPC_One_Br, name='cpc'),
+    path('dashboard/', dashboard1, name='dashboard'),
 
 ]
 
