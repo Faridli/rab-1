@@ -38,7 +38,8 @@ INSTALLED_APPS = [
 # =======================
 MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",  # should be first for debug_toolbar
-    'django.middleware.security.SecurityMiddleware',
+    'django.middleware.security.SecurityMiddleware', 
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # ⭐ এখানে
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -109,7 +110,9 @@ USE_TZ = True
 # =======================
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static'] 
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = BASE_DIR / 'staticfiles'  
+# WhiteNoise gzip & cache
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
